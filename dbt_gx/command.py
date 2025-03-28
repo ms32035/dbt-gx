@@ -3,8 +3,11 @@ from pathlib import Path
 
 import click
 
+from dbt_gx.converter import TestConverter
 from dbt_gx.core import DbtGxRunner, create_default_config, load_config
+from dbt_gx.models.dbt_gx_runtime_env import GbtGxRuntimeEnv
 from dbt_gx.models.dbt_profile import DbtProfileConfig
+from dbt_gx.scanner import DbtProjectScanner
 
 
 def test_command(
@@ -39,12 +42,15 @@ def test_command(
         profiles_dir=profiles_dir,
     )
 
-    # Initialize and run tests
-    runner = DbtGxRunner(
+    # Create runtime environment and initialize runner
+    runtime_env = GbtGxRuntimeEnv(
         project_dir=project_dir,
-        config=config_obj,
-        profile_config=profile_config,
+        dbt_gx_config=config_obj,
+        dbt_profile_config=profile_config,
+        output=output,
     )
+
+    runner = DbtGxRunner(runtime_env=runtime_env)
     results = runner.run()
 
     # Save results
@@ -54,3 +60,37 @@ def test_command(
         json.dump(results, f, indent=2)
 
     click.echo(f"Test results saved to {output}")
+
+
+def ls_command(
+    project_dir: Path,
+    config: Path | None = None,
+) -> None:
+    """Run dbt tests using Great Expectations.
+
+    Args:
+        project_dir: Path to the dbt project directory.
+        config: Optional path to dbt-gx configuration file. If not provided, default configuration will be used.
+    """
+    # Load configurations
+    if config:
+        click.echo(f"Loading configuration from {config}...")
+        config_obj = load_config(config)
+    else:
+        click.echo("No configuration file provided, using default configuration...")
+        config_obj = create_default_config()
+
+    scanner = DbtProjectScanner(project_dir=project_dir)
+
+    project = scanner.scan_project()
+
+    converter = TestConverter(config_obj)
+
+    for model in project.models:
+        click.echo(f"Model: {model.name}")
+        for test in model.tests:
+            test_conversion = converter.get_test_conversion(test.test_type, test.namespace)
+            if test_conversion:
+                click.echo(f"  ✓ Test: {test.name} -> {test_conversion.expectation_class}")
+            else:
+                click.secho(f"  ⚠️ Test: {test.name} -> No conversion found", fg="yellow")

@@ -44,6 +44,7 @@ dev = [
 snowflake = [
     "snowflake-sqlalchemy>1.7.0",
     "dbt-snowflake>=1.8.0",
+    "snowflake-connector-python[secure-local-storage]",
 ]
 
 

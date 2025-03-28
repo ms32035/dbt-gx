@@ -1,12 +1,14 @@
 """Core module for running dbt tests with Great Expectations."""
 
-from pathlib import Path
-from typing import Any
+from typing import TYPE_CHECKING
 
 from dbt_gx.models.dbt_gx_config import DbtGxConfig, create_default_config, load_config
-from dbt_gx.models.dbt_profile import DbtProfileConfig
+from dbt_gx.models.dbt_gx_runtime_env import GbtGxRuntimeEnv
 from dbt_gx.runner import TestRunner
 from dbt_gx.scanner import DbtProjectScanner
+
+if TYPE_CHECKING:
+    from great_expectations.checkpoint import CheckpointDescriptionDict
 
 
 class DbtGxRunner:
@@ -14,24 +16,21 @@ class DbtGxRunner:
 
     def __init__(
         self,
-        project_dir: Path,
-        config: DbtGxConfig,
-        profile_config: DbtProfileConfig,
+        runtime_env: GbtGxRuntimeEnv,
     ) -> None:
         """Initialize the runner.
 
         Args:
-            project_dir: Path to the dbt project directory.
-            config: dbt-gx configuration.
-            profile_config: dbt profile configuration.
+            runtime_env: Runtime environment configuration containing project directory,
+                        dbt profile configuration, and dbt-gx configuration.
         """
-        self.scanner = DbtProjectScanner(project_dir=project_dir)
+        self.scanner = DbtProjectScanner(project_dir=runtime_env.project_dir)
+
         self.runner = TestRunner(
-            config=config,
-            target_config=profile_config.load_target(),
+            runtime_env=runtime_env,
         )
 
-    def run(self) -> dict[str, dict[str, Any]]:
+    def run(self) -> "CheckpointDescriptionDict":
         """Run tests for all models in the project.
 
         Returns:
@@ -39,9 +38,10 @@ class DbtGxRunner:
         """
         # Scan project for models and tests
         project = self.scanner.scan_project()
+        self.runner.add_project(project)
 
         # Run tests for all models
-        return self.runner.run_project(project)
+        return self.runner.run()
 
 
 __all__ = [

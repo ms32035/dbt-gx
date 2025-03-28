@@ -1,9 +1,17 @@
 models:
   - name: stg_customers
     description: Customer data with basic cleaning and transformation applied, one row per customer.
+
+    data_tests:
+      - dbt_utils.unique_combination_of_columns:
+          combination_of_columns:
+            - customer_id
+            - customer_name
+
     columns:
       - name: customer_id
         description: The unique key for each customer.
         data_tests:
           - not_null
           - unique
+          - dbt_utils.at_least_one

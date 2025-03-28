@@ -176,10 +176,11 @@ def custom_function(test_config: dict, context: dict) -> dict:
    pre-commit install
    ```
 
-### Tunning tests
+### Running tests
 
 ```
 cd tests/resources/dbt_projects/jaffle-shop
 dbt seed --profiles-dir ../../dbt_profiles
 dbt run --profiles-dir ../../dbt_profiles
+
 ```

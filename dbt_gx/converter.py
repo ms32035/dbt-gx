@@ -39,16 +39,18 @@ class TestConverter:
         """
         self.config = config
 
-    def _get_test_conversion(self, test_name: str) -> TestConversion | None:
+    def get_test_conversion(self, test_type: str, namespace: str | None) -> TestConversion | None:
         """Get test conversion configuration for a test.
 
         Args:
-            test_name: Name of the test.
+            test_type: Name of the test.
 
         Returns:
             Test conversion configuration if found, None otherwise.
         """
-        return self.config.test_mappings.get(test_name)
+        if namespace is None:
+            return self.config.test_mappings.get(test_type)
+        return self.config.test_mappings.get(f"{namespace}.{test_type}")
 
     def _get_context(self, test: DbtTest) -> dict[str, str]:
         """Get the context dictionary for parameter formatting.
@@ -74,7 +76,7 @@ class TestConverter:
             Great Expectations expectation instance if conversion is possible,
             None otherwise.
         """
-        conversion = self._get_test_conversion(test.name)
+        conversion = self.get_test_conversion(test.test_type, test.namespace)
         if not conversion:
             return None
 
@@ -90,11 +92,9 @@ class TestConverter:
 
         # Format parameter values with context
         params = {}
-        for key, value in conversion.params.dict(exclude_none=True).items():
-            if isinstance(value, str):
-                params[key] = value.format(**context)
-            else:
-                params[key] = value
+
+        for key, value in conversion.params.kwargs_mapping.items():
+            params[value] = test.kwargs[key]
 
         if isinstance(test, DbtColumnTest):
             params["column"] = test.column_name
@@ -104,7 +104,7 @@ class TestConverter:
             params.update(test.kwargs["kwargs"])
 
         # Get the expectation class and create an instance
-        expectation_class = getattr(expectations, conversion.expectation_type)
+        expectation_class = getattr(expectations, conversion.expectation_class)
         return expectation_class(**params)
 
     def convert_model(self, model: DbtModel) -> GxBatch:

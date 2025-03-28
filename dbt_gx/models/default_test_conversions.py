@@ -5,22 +5,18 @@ from dbt_gx.models.test_conversion_base import TestConversion, TestConversionPar
 # Default test conversions mapping dbt test names to Great Expectations expectations
 DEFAULT_TEST_CONVERSIONS = {
     "not_null": TestConversion(
-        expectation_type="expect_column_values_to_not_be_null",
+        expectation_class="ExpectColumnValuesToNotBeNull",
     ),
     "unique": TestConversion(
-        expectation_type="expect_column_values_to_be_unique",
+        expectation_class="ExpectColumnValuesToBeUnique",
     ),
-    "accepted_values": TestConversion(
-        expectation_type="expect_column_values_to_be_in_set",
-        params=TestConversionParams(value="{values}", kwargs_mapping={"values": "value_set"}),
+    "dbt_utils.at_least_one": TestConversion(
+        expectation_class="ExpectColumnUniqueValueCountToBeBetween",
+        params=TestConversionParams(kwargs={"min_value": 1}),
     ),
-    "relationships": TestConversion(
-        expectation_type="expect_column_values_to_be_in_set",
-        params=TestConversionParams(value="{to}", kwargs={"parse_strings_as_datetimes": True}),
-    ),
-    "positive_value": TestConversion(
-        expectation_type="expect_column_values_to_be_between",
-        params=TestConversionParams(kwargs={"min_value": 0, "strict_min": True}),
+    "dbt_utils.unique_combination_of_columns": TestConversion(
+        expectation_class="ExpectCompoundColumnsToBeUnique",
+        params=TestConversionParams(kwargs_mapping={"combination_of_columns": "column_list"}),
     ),
 }
 

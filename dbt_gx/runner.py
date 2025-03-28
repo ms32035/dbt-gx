@@ -1,15 +1,19 @@
 """Test runner module for executing Great Expectations tests."""
 
 import importlib
-from typing import Any, cast
+from typing import TYPE_CHECKING, cast
 
-from great_expectations import get_context
+from great_expectations import Checkpoint, ValidationDefinition, get_context
 from great_expectations.core.expectation_suite import ExpectationSuite
 from great_expectations.datasource.fluent import SQLDatasource
 
 from dbt_gx.converter import TestConverter
 from dbt_gx.models.dbt_base import DbtModel, DbtProject
-from dbt_gx.models.dbt_gx_config import DbtGxConfig, create_data_context_config
+from dbt_gx.models.dbt_gx_config import create_data_context_config
+from dbt_gx.models.dbt_gx_runtime_env import GbtGxRuntimeEnv
+
+if TYPE_CHECKING:
+    from great_expectations.checkpoint import CheckpointDescriptionDict
 
 
 class TestRunner:
@@ -17,23 +21,27 @@ class TestRunner:
 
     def __init__(
         self,
-        config: DbtGxConfig,
-        target_config: dict[str, Any],
+        runtime_env: GbtGxRuntimeEnv,
     ):
         """Initialize the test runner.
 
         Args:
-            config: dbt-gx configuration.
-            target_config: Target configuration from dbt profile.
+            runtime_env: Runtime environment configuration containing dbt-gx configuration
+                       and dbt profile configuration.
         """
         # Create context with config
-        context_config = create_data_context_config(config)
+        context_config = create_data_context_config(runtime_env.dbt_gx_config)
+        runtime_env.dbt_profile_config.load_target()
+        self.runtime_env = runtime_env
         self.context = get_context(project_config=context_config, mode="ephemeral")
-        self.config = config
-        self.target_config = target_config
+
+        self.checkpoint = Checkpoint(
+            validation_definitions=[],
+            name="dbt_gx_checkpoint",
+        )
 
         # Initialize converter
-        self.converter = TestConverter(config)
+        self.converter = TestConverter(runtime_env.dbt_gx_config)
 
         # Dictionary to store datasources by database+schema
         self.datasources: dict[tuple[str, str], SQLDatasource] = {}
@@ -48,8 +56,8 @@ class TestRunner:
             Tuple of (database, schema) to use as key.
         """
         return (
-            model.database or self.target_config.get("database", ""),
-            model.schema or self.target_config.get("schema", ""),
+            model.database or self.runtime_env.dbt_profile_config.target_config.get("database", ""),
+            model.schema or self.runtime_env.dbt_profile_config.target_config.get("schema", ""),
         )
 
     def _get_or_create_datasource(self, model: DbtModel) -> SQLDatasource:
@@ -65,7 +73,7 @@ class TestRunner:
 
         if key not in self.datasources:
             # Create new datasource config with model's database and schema
-            datasource_config = self.target_config.copy()
+            datasource_config = self.runtime_env.dbt_profile_config.target_config.copy()
             if model.database:
                 datasource_config["database"] = model.database
             if model.schema:
@@ -81,10 +89,10 @@ class TestRunner:
 
         return self.datasources[key]
 
-    def run_model(
+    def add_model(
         self,
         model: DbtModel,
-    ) -> dict[str, Any]:
+    ) -> None:
         """Run tests for a single dbt model using Great Expectations.
 
         Args:
@@ -101,7 +109,7 @@ class TestRunner:
 
         # Create a new expectation suite for this model
         suite = ExpectationSuite(
-            name=f"{model.name}_suite",
+            name={model.name},
             expectations=[],
             meta={
                 "notes": {
@@ -110,35 +118,34 @@ class TestRunner:
                 }
             },
         )
+        for exp in ge_batch.expectations:
+            suite.add_expectation(exp)
+
         self.context.suites.add(suite)
 
         # Create data asset for the model if it doesn't exist
         if model.name not in datasource.assets:
-            datasource.add_table_asset(
+            asset = datasource.add_table_asset(
                 name=model.name,
                 table_name=model.name,
             )
+            batch_definition = asset.add_batch_definition(name="dbt_gx")
+        else:
+            asset = datasource.get_asset(model.name)
+            batch_definition = asset.get_batch_definition("dbt_gx")
 
-        # Get validator for the model
-        validator = self.context.get_validator(
-            datasource_name=datasource.name,
-            data_asset_name=model.name,
-            expectation_suite_name=suite.name,
-            batch_request=None,  # Use default batch request
+        validation_definition = ValidationDefinition(
+            name=asset.name,
+            data=batch_definition,
+            suite=suite,
         )
+        self.context.validation_definitions.add(validation_definition)
+        self.checkpoint.validation_definitions.append(validation_definition)
 
-        # Add expectations
-        for expectation in ge_batch.expectations:
-            validator.expect_configured(expectation)
-
-        # Run validation
-        results = validator.validate()
-        return cast(dict[str, Any], results.to_json_dict())
-
-    def run_project(
+    def add_project(
         self,
         project: DbtProject,
-    ) -> dict[str, dict[str, Any]]:
+    ) -> None:
         """Run tests for all models in a dbt project using Great Expectations.
 
         Args:
@@ -147,9 +154,14 @@ class TestRunner:
         Returns:
             Dictionary mapping model names to their test results.
         """
-        results = {}
+
         for model in project.models:
             if model.tests:  # Only run tests for models that have tests
-                results[model.name] = self.run_model(model)
+                self.add_model(model)
 
-        return results
+    def run(self) -> "CheckpointDescriptionDict":
+        result = self.checkpoint.run()
+        if self.runtime_env.dbt_gx_config.generate_docs:
+            self.context.add_data_docs_site(site_name="dbt_gx", site_config=self.runtime_env.site_config)
+            self.context.build_data_docs(["dbt_gx"])
+        return result.describe_dict()

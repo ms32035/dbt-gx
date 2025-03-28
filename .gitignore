@@ -3,3 +3,5 @@ uv.lock
 .user.yml
 logs/
 tests/resources/dbt_projects/jaffle-shop/target
+dbt_packages
+package-lock.yml

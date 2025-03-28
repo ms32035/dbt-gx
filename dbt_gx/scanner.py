@@ -68,7 +68,7 @@ class DbtProjectScanner:
         model_tests: dict[str, list[DbtTest]] = {}
 
         # First pass: collect all tests and group by model
-        for node_key, node in manifest.get("nodes", {}).items():
+        for node in manifest.get("nodes", {}).values():
             if node.get("resource_type") != "test":
                 continue
 
@@ -85,17 +85,17 @@ class DbtProjectScanner:
                 model_tests[attached_node] = []
 
             test: DbtTest
-            if "column_name" in test_metadata:
+            if "column_name" in test_metadata.get("kwargs", {}):
                 test = DbtColumnTest(
-                    name=node_key,
+                    name="test." + ".".join(node["fqn"]),
                     test_type=test_metadata["name"],
                     namespace=test_metadata.get("namespace", ""),
-                    column_name=test_metadata["column_name"],
+                    column_name=test_metadata["kwargs"]["column_name"],
                     kwargs=test_metadata.get("kwargs", {}),
                 )
             else:
                 test = DbtTableTest(
-                    name=node_key,
+                    name="test." + ".".join(node["fqn"]),
                     test_type=test_metadata["name"],
                     namespace=test_metadata.get("namespace", ""),
                     kwargs=test_metadata.get("kwargs", {}),

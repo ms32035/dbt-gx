@@ -10,7 +10,7 @@ from . import Connection
 
 
 class SnowflakeConnection(Connection):
-    direct_params = ("account", "user", "password", "database", "warehouse", "schema", "role")
+    direct_params = ("account", "user", "password", "database", "warehouse", "schema", "role", "authenticator")
 
     @classmethod
     def datasource(cls, target_config: dict[str, Any], model: DbtModel) -> Datasource:

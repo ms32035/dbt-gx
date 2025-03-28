@@ -15,6 +15,7 @@ class DbtGxConfig:
     """Configuration for dbt-gx."""
 
     test_mappings: dict[str, TestConversion] = field(default_factory=default_convertion_factory)
+    generate_docs: bool = True
 
     def merge_with(self, other: "DbtGxConfig") -> "DbtGxConfig":
         """Merge this configuration with another.
@@ -57,7 +58,7 @@ def load_config(config_path: Path) -> DbtGxConfig:
         for test_name, test_config in config_dict["test_mappings"].items():
             params = TestConversionParams(**test_config.get("params", {}))
             test_mappings[test_name] = TestConversion(
-                expectation_type=test_config["expectation"],
+                expectation_class=test_config["expectation"],
                 params=params,
                 function=test_config.get("function"),
             )
@@ -82,7 +83,12 @@ def create_data_context_config(config: DbtGxConfig) -> dict[str, Any]:
                 "class_name": "InMemoryStoreBackend",
             },
             "validations_store": {"class_name": "InMemoryStoreBackend"},
+            "validation_results_store": {"class_name": "InMemoryStoreBackend"},
+            "checkpoint_store": {"class_name": "InMemoryStoreBackend"},
         },
         "expectations_store_name": "expectations_store",
         "validations_store_name": "validations_store",
+        "validation_results_store_name": "validation_results_store",
+        "checkpoint_store_name": "checkpoint_store",
+        "data_docs_sites": {},
     }

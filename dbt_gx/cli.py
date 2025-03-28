@@ -8,9 +8,10 @@ import click
 class Context:
     """CLI context object."""
 
-    def __init__(self, project_dir: Path):
-        """Initialize context with project directory."""
+    def __init__(self, project_dir: Path, config: Path | None):
+        """Initialize context with project directory and config path."""
         self.project_dir = project_dir
+        self.config = config
 
 
 @click.group()
@@ -20,19 +21,36 @@ class Context:
     help="dbt project directory",
     type=click.Path(exists=True, file_okay=False, dir_okay=True, path_type=Path),
 )
-@click.pass_context
-def cli(ctx: click.Context, project_dir: Path) -> None:
-    """Execute dbt tests using Great Expectations as the execution engine."""
-    ctx.obj = Context(project_dir)
-
-
-@cli.command()
 @click.option(
     "--config",
     required=False,
     help="Path to dbt-gx configuration file (optional)",
     type=click.Path(file_okay=True, dir_okay=False, path_type=Path),
 )
+@click.pass_context
+def cli(ctx: click.Context, project_dir: Path, config: Path | None) -> None:
+    """Execute dbt tests using Great Expectations as the execution engine."""
+    ctx.obj = Context(project_dir, config)
+
+
+@cli.command()
+@click.pass_context
+def ls(ctx: click.Context) -> None:
+    """List available dbt tests."""
+    click.echo("Listing dbt tests...")
+    try:
+        from dbt_gx.command import ls_command
+
+        ls_command(
+            ctx.obj.project_dir,
+            ctx.obj.config,
+        )
+    except Exception as e:
+        click.echo(f"Error listing tests: {e!s}", err=True)
+        raise click.Abort() from e
+
+
+@cli.command()
 @click.option(
     "--output",
     default="test_results.json",
@@ -61,7 +79,6 @@ def cli(ctx: click.Context, project_dir: Path) -> None:
 @click.pass_context
 def test(
     ctx: click.Context,
-    config: Path | None,
     output: Path,
     profile_name: str,
     target: str | None,
@@ -74,7 +91,7 @@ def test(
 
         test_command(
             ctx.obj.project_dir,
-            config,
+            ctx.obj.config,
             output,
             profile_name,
             target,

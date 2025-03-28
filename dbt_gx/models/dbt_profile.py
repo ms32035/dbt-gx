@@ -2,7 +2,7 @@
 
 import os
 from argparse import Namespace
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any, cast
 
@@ -25,9 +25,10 @@ class DbtProfileConfig:
     to ensure compatibility with dbt's profile loading behavior.
     """
 
-    profile_name: str
+    profile_name: str = "default"
     target_name: str | None = None
     profiles_dir: Path | None = None
+    target_config: dict[str, Any] = field(default_factory=dict)
 
     def __post_init__(self) -> None:
         """Set default profiles dir if not provided."""
@@ -62,7 +63,7 @@ class DbtProfileConfig:
 
         return raw_profiles
 
-    def load_target(self) -> dict[str, Any]:
+    def load_target(self) -> None:
         """Load the target configuration from the dbt profile.
 
         This method will:
@@ -101,4 +102,4 @@ class DbtProfileConfig:
         if not target_dict:
             raise KeyError(f"Target '{self.target_name or 'default'}' not found in profile '{self.profile_name}'")
 
-        return target_dict
+        self.target_config = target_dict
