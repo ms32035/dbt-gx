@@ -9,8 +9,8 @@ class DbtTest:
     """Base class for dbt test configurations."""
 
     name: str
-    namespace: str
     test_type: str
+    namespace: str | None = None
     kwargs: dict[str, Any] = field(default_factory=dict)
 
 
@@ -34,6 +34,15 @@ class DbtModel:
         if not self.schema:
             return None
         return f"{self.database}.{self.schema}" if self.database else self.schema
+
+    @property
+    def full_name(self) -> str:
+        """Get the full name for the model.
+
+        Returns:
+            The full name, including database and schema, or None if schema is not set.
+        """
+        return f"{self.full_schema}.{self.name}" if self.full_schema else self.name
 
 
 @dataclass(kw_only=True)

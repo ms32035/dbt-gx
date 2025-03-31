@@ -180,6 +180,7 @@ def custom_function(test_config: dict, context: dict) -> dict:
 
 ```
 cd tests/resources/dbt_projects/jaffle-shop
+dbt deps
 dbt seed --profiles-dir ../../dbt_profiles
 dbt run --profiles-dir ../../dbt_profiles
 

@@ -8,9 +8,17 @@ models:
             - customer_id
             - customer_name
 
+    meta:
+      dbt_gx:
+
     columns:
       - name: customer_id
         description: The unique key for each customer.
+        meta:
+          dbt_gx:
+            data_tests:
+            gx_tests:
+
         data_tests:
           - not_null
           - unique

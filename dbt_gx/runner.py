@@ -109,7 +109,7 @@ class TestRunner:
 
         # Create a new expectation suite for this model
         suite = ExpectationSuite(
-            name={model.name},
+            name=model.name,
             expectations=[],
             meta={
                 "notes": {
