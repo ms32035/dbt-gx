@@ -66,7 +66,7 @@ class TestConverter:
             context["column_name"] = test.column_name
         return context
 
-    def convert_test(self, test: DbtTest) -> expectations.Expectation | None:
+    def convert_test(self, model: DbtModel, test: DbtTest) -> expectations.Expectation | None:
         """Convert a dbt test to a Great Expectations expectation.
 
         Args:
@@ -105,7 +105,7 @@ class TestConverter:
 
         # Get the expectation class and create an instance
         expectation_class = getattr(expectations, conversion.expectation_class)
-        return expectation_class(**params)
+        return expectation_class(**params, meta={"model": model.meta})
 
     def convert_model(self, model: DbtModel) -> GxBatch:
         """Convert a dbt model and its tests to a Great Expectations batch.
@@ -119,7 +119,7 @@ class TestConverter:
         converted_expectations = []
 
         for test in model.tests:
-            expectation = self.convert_test(test)
+            expectation = self.convert_test(model, test)
             if expectation:
                 converted_expectations.append(expectation)
 

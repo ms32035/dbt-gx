@@ -1,7 +1,8 @@
 """Test runner module for executing Great Expectations tests."""
 
 import importlib
-from typing import TYPE_CHECKING, cast
+from datetime import datetime
+from typing import Any, cast
 
 from great_expectations import Checkpoint, ValidationDefinition, get_context
 from great_expectations.core.expectation_suite import ExpectationSuite
@@ -11,9 +12,6 @@ from dbt_gx.converter import TestConverter
 from dbt_gx.models.dbt_base import DbtModel, DbtProject
 from dbt_gx.models.dbt_gx_config import create_data_context_config
 from dbt_gx.models.dbt_gx_runtime_env import GbtGxRuntimeEnv
-
-if TYPE_CHECKING:
-    from great_expectations.checkpoint import CheckpointDescriptionDict
 
 
 class TestRunner:
@@ -159,9 +157,17 @@ class TestRunner:
             if model.tests:  # Only run tests for models that have tests
                 self.add_model(model)
 
-    def run(self) -> "CheckpointDescriptionDict":
-        result = self.checkpoint.run()
+    def run(self) -> dict[str, Any]:
+        results = self.checkpoint.run()
+        end_time = datetime.now()
         if self.runtime_env.dbt_gx_config.generate_docs:
             self.context.add_data_docs_site(site_name="dbt_gx", site_config=self.runtime_env.site_config)
             self.context.build_data_docs(["dbt_gx"])
-        return result.describe_dict()
+        return {
+            "summary": results.describe_dict(),
+            "run": results.run_id.to_json_dict(),
+            "results": [r.to_json_dict() for r in results.run_results.values()],
+            "end_time": end_time.astimezone().isoformat(),
+            "version": 1,
+            "provider": "great_expectations",
+        }

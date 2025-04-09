@@ -44,6 +44,14 @@ class DbtModel:
         """
         return f"{self.full_schema}.{self.name}" if self.full_schema else self.name
 
+    @property
+    def meta(self) -> dict[str, str | None]:
+        return {
+            "database": self.database,
+            "schema": self.schema,
+            "name": self.name,
+        }
+
 
 @dataclass(kw_only=True)
 class DbtProject:
