@@ -1,0 +1,47 @@
+models:
+  - name: stg_stores
+    description: Store data with basic cleaning and transformation applied, one row per store.
+
+    data_tests:
+      - dbt_utils.unique_combination_of_columns:
+          combination_of_columns:
+            - store_id
+            - store_name
+
+    meta:
+      dbt_gx:
+
+    columns:
+      - name: id
+        description: The unique key for each store.
+        meta:
+          dbt_gx:
+            data_tests:
+            gx_tests:
+
+        data_tests:
+          - not_null
+          - unique
+          - dbt_utils.at_least_one
+
+      - name: name
+        description: The name of the store.
+        data_tests:
+          - not_null
+
+      - name: opened_at
+        description: The date when the store was opened.
+        data_tests:
+          - not_null
+
+      - name: tax_rate
+        description: The sales tax rate applied at this store.
+        data_tests:
+          - not_null
+          - dbt_expectations.expect_column_values_to_be_between:
+              min_value: 0
+              max_value: 1
+
+      - name: this_column_does_not_exist
+        data_tests:
+          - not_null

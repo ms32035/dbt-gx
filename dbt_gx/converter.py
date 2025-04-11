@@ -96,8 +96,11 @@ class TestConverter:
         for key, value in conversion.params.kwargs_mapping.items():
             params[value] = test.kwargs[key]
 
+        check_type = "table"
+
         if isinstance(test, DbtColumnTest):
             params["column"] = test.column_name
+            check_type = "column"
 
         # Add any additional parameters from test_config
         if "kwargs" in test.kwargs:
@@ -105,7 +108,7 @@ class TestConverter:
 
         # Get the expectation class and create an instance
         expectation_class = getattr(expectations, conversion.expectation_class)
-        return expectation_class(**params, meta={"model": model.meta})
+        return expectation_class(**params, meta={"model": model.meta, "check_type": check_type})
 
     def convert_model(self, model: DbtModel) -> GxBatch:
         """Convert a dbt model and its tests to a Great Expectations batch.

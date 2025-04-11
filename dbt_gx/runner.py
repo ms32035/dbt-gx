@@ -164,10 +164,9 @@ class TestRunner:
             self.context.add_data_docs_site(site_name="dbt_gx", site_config=self.runtime_env.site_config)
             self.context.build_data_docs(["dbt_gx"])
         return {
-            "summary": results.describe_dict(),
+            "provider": "great_expectations",
+            "version": 1,
             "run": results.run_id.to_json_dict(),
             "results": [r.to_json_dict() for r in results.run_results.values()],
             "end_time": end_time.astimezone().isoformat(),
-            "version": 1,
-            "provider": "great_expectations",
         }
