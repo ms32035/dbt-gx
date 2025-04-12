@@ -17,6 +17,7 @@ def test_command(
     profile_name: str = "default",
     target: str | None = None,
     profiles_dir: Path | None = None,
+    run_name: str = "dbt-gx",
 ) -> None:
     """Run dbt tests using Great Expectations.
 
@@ -27,6 +28,7 @@ def test_command(
         profile_name: Name of the dbt profile to use.
         target: Target name to use from the profile.
         profiles_dir: Path to dbt profiles directory.
+        run_name: Name for this test run.
     """
     # Load configurations
     if config:
@@ -48,6 +50,7 @@ def test_command(
         dbt_gx_config=config_obj,
         dbt_profile_config=profile_config,
         output=output,
+        run_name=run_name,
     )
 
     runner = DbtGxRunner(runtime_env=runtime_env)

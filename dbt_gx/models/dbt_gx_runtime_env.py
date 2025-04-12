@@ -12,6 +12,7 @@ class GbtGxRuntimeEnv:
     dbt_profile_config: DbtProfileConfig = field(default_factory=DbtProfileConfig)
     dbt_gx_config: DbtGxConfig = field(default_factory=DbtGxConfig)
     output: Path = field(default_factory=lambda: Path("test_results.json"))
+    run_name: str = "dbt-gx"
 
     @property
     def site_path(self) -> Path:

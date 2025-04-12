@@ -76,6 +76,12 @@ def ls(ctx: click.Context) -> None:
     help="Path to dbt profiles directory (defaults to ~/.dbt)",
     type=click.Path(file_okay=False, dir_okay=True, path_type=Path),
 )
+@click.option(
+    "--run-name",
+    default="dbt-gx",
+    help="Name for this test run",
+    type=str,
+)
 @click.pass_context
 def test(
     ctx: click.Context,
@@ -83,6 +89,7 @@ def test(
     profile_name: str,
     target: str | None,
     profiles_dir: Path | None,
+    run_name: str,
 ) -> None:
     """Run dbt tests using Great Expectations."""
     click.echo("Running dbt tests...")
@@ -96,6 +103,7 @@ def test(
             profile_name,
             target,
             profiles_dir,
+            run_name,
         )
     except Exception as e:
         click.echo(f"Error running tests: {e!s}", err=True)

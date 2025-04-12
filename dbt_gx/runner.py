@@ -6,6 +6,7 @@ from typing import Any, cast
 
 from great_expectations import Checkpoint, ValidationDefinition, get_context
 from great_expectations.core.expectation_suite import ExpectationSuite
+from great_expectations.core.run_identifier import RunIdentifier
 from great_expectations.datasource.fluent import SQLDatasource
 
 from dbt_gx.converter import TestConverter
@@ -35,7 +36,7 @@ class TestRunner:
 
         self.checkpoint = Checkpoint(
             validation_definitions=[],
-            name="dbt_gx_checkpoint",
+            name="dbt-gx_checkpoint",
         )
 
         # Initialize converter
@@ -127,10 +128,10 @@ class TestRunner:
                 name=model.name,
                 table_name=model.name,
             )
-            batch_definition = asset.add_batch_definition(name="dbt_gx")
+            batch_definition = asset.add_batch_definition(name="dbt-gx")
         else:
             asset = datasource.get_asset(model.name)
-            batch_definition = asset.get_batch_definition("dbt_gx")
+            batch_definition = asset.get_batch_definition("dbt-gx")
 
         validation_definition = ValidationDefinition(
             name=asset.name,
@@ -158,7 +159,7 @@ class TestRunner:
                 self.add_model(model)
 
     def run(self) -> dict[str, Any]:
-        results = self.checkpoint.run()
+        results = self.checkpoint.run(run_id=RunIdentifier(self.runtime_env.run_name))
         end_time = datetime.now()
         if self.runtime_env.dbt_gx_config.generate_docs:
             self.context.add_data_docs_site(site_name="dbt_gx", site_config=self.runtime_env.site_config)
