@@ -8,7 +8,7 @@ from dbt_gx.runner import TestRunner
 from dbt_gx.scanner import DbtProjectScanner
 
 if TYPE_CHECKING:
-    from great_expectations.checkpoint import CheckpointDescriptionDict
+    from dbt_gx.models.run_result import RunResult
 
 
 class DbtGxRunner:
@@ -30,7 +30,7 @@ class DbtGxRunner:
             runtime_env=runtime_env,
         )
 
-    def run(self) -> "CheckpointDescriptionDict":
+    def run(self) -> "RunResult":
         """Run tests for all models in the project.
 
         Returns:

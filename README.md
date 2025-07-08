@@ -63,7 +63,7 @@ test_conversions:
 
 ```bash
 # Use only default test conversions
-dbt-gx run-tests --config dbt_gx_config.yml
+dbt-gx test --config dbt_gx_config.yml
 
 # Use default test conversions and your custom ones
 dbt-gx run-tests --config dbt_gx_config.yml --test-conversion-config test_conversions.yml
@@ -179,9 +179,17 @@ def custom_function(test_config: dict, context: dict) -> dict:
 ### Running tests
 
 ```
+docker compose up -d
+
 cd tests/resources/dbt_projects/jaffle-shop
 dbt deps
 dbt seed --profiles-dir ../../dbt_profiles
 dbt run --profiles-dir ../../dbt_profiles
 
+```
+
+Next run
+
+```
+dbt-gx test --profiles-dir ../../dbt_profiles
 ```

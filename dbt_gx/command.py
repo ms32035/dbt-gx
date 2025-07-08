@@ -1,4 +1,5 @@
 import json
+from dataclasses import asdict
 from pathlib import Path
 
 import click
@@ -60,8 +61,9 @@ def test_command(
     output = project_dir / "target" / "dbt_gx" / output
     output.parent.mkdir(parents=True, exist_ok=True)
     with output.open("w") as f:
-        json.dump(results, f, indent=2)
+        json.dump(asdict(results), f, indent=2, default=results.serializer)
 
+    click.echo(results.run_stats())
     click.echo(f"Test results saved to {output}")
 
 
