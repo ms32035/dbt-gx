@@ -6,7 +6,7 @@ from typing import Any
 
 import yaml
 
-from dbt_gx.models.default_test_conversions import default_convertion_factory
+from dbt_gx.models.default_test_conversions import default_conversion_factory
 from dbt_gx.models.test_conversion_base import TestConversion, TestConversionParams
 
 
@@ -14,7 +14,7 @@ from dbt_gx.models.test_conversion_base import TestConversion, TestConversionPar
 class DbtGxConfig:
     """Configuration for dbt-gx."""
 
-    test_mappings: dict[str, TestConversion] = field(default_factory=default_convertion_factory)
+    test_mappings: dict[str, TestConversion] = field(default_factory=default_conversion_factory)
     generate_docs: bool = True
 
     def merge_with(self, other: "DbtGxConfig") -> "DbtGxConfig":
@@ -52,8 +52,10 @@ def load_config(config_path: Path) -> DbtGxConfig:
     with config_path.open() as f:
         config_dict = yaml.safe_load(f)
 
+    generate_docs = config_dict.get("generate_docs", True)
+
     # Handle test mappings if present
-    test_mappings = default_convertion_factory()
+    test_mappings = default_conversion_factory()
     if "test_mappings" in config_dict:
         for test_name, test_config in config_dict["test_mappings"].items():
             params = TestConversionParams(**test_config.get("params", {}))
@@ -63,10 +65,10 @@ def load_config(config_path: Path) -> DbtGxConfig:
                 function=test_config.get("function"),
             )
 
-    return DbtGxConfig(test_mappings=test_mappings)
+    return DbtGxConfig(test_mappings=test_mappings, generate_docs=generate_docs)
 
 
-def create_data_context_config(config: DbtGxConfig) -> dict[str, Any]:
+def create_data_context_config() -> dict[str, Any]:
     """Create Great Expectations data context configuration.
 
     Args:

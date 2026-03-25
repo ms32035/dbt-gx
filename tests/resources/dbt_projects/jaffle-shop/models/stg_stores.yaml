@@ -4,9 +4,10 @@ models:
 
     data_tests:
       - dbt_utils.unique_combination_of_columns:
-          combination_of_columns:
-            - store_id
-            - store_name
+          arguments:
+            combination_of_columns:
+              - store_id
+              - store_name
 
     meta:
       dbt_gx:
@@ -39,8 +40,9 @@ models:
         data_tests:
           - not_null
           - dbt_expectations.expect_column_values_to_be_between:
-              min_value: 0
-              max_value: 1
+              arguments:
+                min_value: 0
+                max_value: 1
 
       - name: this_column_does_not_exist
         data_tests:

@@ -18,15 +18,6 @@ class DbtProjectScanner:
         """
         self.project_dir = project_dir
 
-    def scan_models(self) -> list[DbtModel]:
-        """Scan project for models and their tests.
-
-        Returns:
-            List of models with their tests.
-        """
-        manifest = self._load_manifest()
-        return self._extract_models(manifest)
-
     def scan_project(self) -> DbtProject:
         """Scan project for models and tests.
 
@@ -188,15 +179,15 @@ class DbtProjectScanner:
         return models
 
     def _process_name(self, name: str) -> tuple[str, str | None]:
-        """Process a name into a tuple of test name and namespace.
+        """Process a name into a tuple of test type and namespace.
 
         Args:
-            name: The name to process.
+            name: The name to process, optionally in "namespace.test_type" format.
 
         Returns:
-            Tuple of test name and namespace.
+            Tuple of (test_type, namespace).
         """
         if "." in name:
-            parts = name.split(".", 1)
-            return parts[0], parts[1]
+            namespace, test_type = name.split(".", 1)
+            return test_type, namespace
         return name, None

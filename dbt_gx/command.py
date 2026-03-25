@@ -6,7 +6,7 @@ import click
 
 from dbt_gx.converter import TestConverter
 from dbt_gx.core import DbtGxRunner, create_default_config, load_config
-from dbt_gx.models.dbt_gx_runtime_env import GbtGxRuntimeEnv
+from dbt_gx.models.dbt_gx_runtime_env import DbtGxRuntimeEnv
 from dbt_gx.models.dbt_profile import DbtProfileConfig
 from dbt_gx.scanner import DbtProjectScanner
 
@@ -46,19 +46,19 @@ def test_command(
     )
 
     # Create runtime environment and initialize runner
-    runtime_env = GbtGxRuntimeEnv(
+    runtime_env = DbtGxRuntimeEnv(
         project_dir=project_dir,
         dbt_gx_config=config_obj,
         dbt_profile_config=profile_config,
-        output=output,
         run_name=run_name,
     )
 
     runner = DbtGxRunner(runtime_env=runtime_env)
     results = runner.run()
 
-    # Save results
-    output = project_dir / "target" / "dbt_gx" / output
+    # Save results — only prepend project path if output is relative
+    if not output.is_absolute():
+        output = project_dir / "target" / "dbt_gx" / output
     output.parent.mkdir(parents=True, exist_ok=True)
     with output.open("w") as f:
         json.dump(asdict(results), f, indent=2, default=results.serializer)

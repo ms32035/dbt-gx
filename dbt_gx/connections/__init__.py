@@ -1,3 +1,4 @@
+from abc import ABC, abstractmethod
 from typing import TYPE_CHECKING, Any, ClassVar
 
 if TYPE_CHECKING:
@@ -6,7 +7,7 @@ if TYPE_CHECKING:
     from dbt_gx.models.dbt_base import DbtModel
 
 
-class Connection:
+class Connection(ABC):
     direct_params: ClassVar[tuple[str, ...]] = tuple()
     mapped_params: ClassVar[dict[str, str]] = {}
     query_params: ClassVar[dict[str, str]] = {}
@@ -21,10 +22,10 @@ class Connection:
             elif key in cls.direct_params:
                 new_params[key] = value
             elif key in cls.query_params:
-                new_params[key] = value
+                query_params[key] = value
 
         return new_params, query_params
 
     @classmethod
-    def datasource(cls, target_config: dict[str, Any], model: "DbtModel") -> "Datasource":
-        raise NotImplementedError
+    @abstractmethod
+    def datasource(cls, target_config: dict[str, Any], model: "DbtModel") -> "Datasource": ...

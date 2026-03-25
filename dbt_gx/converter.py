@@ -94,7 +94,8 @@ class TestConverter:
         params = {}
 
         for key, value in conversion.params.kwargs_mapping.items():
-            params[value] = test.kwargs[key]
+            if key in test.kwargs:
+                params[value] = test.kwargs[key]
 
         check_type = "table"
 

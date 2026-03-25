@@ -40,10 +40,10 @@ vars: {}
 
 2. (Optional) Create a custom test conversion configuration file:
 
-The package comes with built-in test conversions for common dbt tests. If you need to add or override test conversions, create a `test_conversions.yml` file:
+The package comes with built-in test conversions for common dbt tests. If you need to add or override test conversions, create a `test_mappings.yml` file:
 
 ```yaml
-test_conversions:
+test_mappings:
   # Override a default test conversion
   unique:
     expectation: expect_column_values_to_be_unique
@@ -66,7 +66,7 @@ test_conversions:
 dbt-gx test --config dbt_gx_config.yml
 
 # Use default test conversions and your custom ones
-dbt-gx run-tests --config dbt_gx_config.yml --test-conversion-config test_conversions.yml
+dbt-gx test --config dbt_gx_config.yml --test-conversion-config test_mappings.yml
 ```
 
 ### Airflow Integration

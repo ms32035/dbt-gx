@@ -21,5 +21,5 @@ DEFAULT_TEST_CONVERSIONS = {
 }
 
 
-def default_convertion_factory() -> dict[str, TestConversion]:
-    return DEFAULT_TEST_CONVERSIONS
+def default_conversion_factory() -> dict[str, TestConversion]:
+    return dict(DEFAULT_TEST_CONVERSIONS)

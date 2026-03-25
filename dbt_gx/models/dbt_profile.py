@@ -98,8 +98,8 @@ class DbtProfileConfig:
 
         # Get target config
         target_dict = cast(dict[str, Any], profile.credentials.to_dict())
-        target_dict["type"] = profile.to_target_dict()["type"]
         if not target_dict:
             raise KeyError(f"Target '{self.target_name or 'default'}' not found in profile '{self.profile_name}'")
+        target_dict["type"] = profile.to_target_dict()["type"]
 
         self.target_config = target_dict

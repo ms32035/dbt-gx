@@ -3,7 +3,7 @@
 from typing import TYPE_CHECKING
 
 from dbt_gx.models.dbt_gx_config import DbtGxConfig, create_default_config, load_config
-from dbt_gx.models.dbt_gx_runtime_env import GbtGxRuntimeEnv
+from dbt_gx.models.dbt_gx_runtime_env import DbtGxRuntimeEnv
 from dbt_gx.runner import TestRunner
 from dbt_gx.scanner import DbtProjectScanner
 
@@ -16,7 +16,7 @@ class DbtGxRunner:
 
     def __init__(
         self,
-        runtime_env: GbtGxRuntimeEnv,
+        runtime_env: DbtGxRuntimeEnv,
     ) -> None:
         """Initialize the runner.
 

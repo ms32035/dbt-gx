@@ -12,7 +12,7 @@ from great_expectations.datasource.fluent import SQLDatasource
 from dbt_gx.converter import TestConverter
 from dbt_gx.models.dbt_base import DbtModel, DbtProject
 from dbt_gx.models.dbt_gx_config import create_data_context_config
-from dbt_gx.models.dbt_gx_runtime_env import GbtGxRuntimeEnv
+from dbt_gx.models.dbt_gx_runtime_env import DbtGxRuntimeEnv
 from dbt_gx.models.run_result import RunResult
 
 
@@ -21,7 +21,7 @@ class TestRunner:
 
     def __init__(
         self,
-        runtime_env: GbtGxRuntimeEnv,
+        runtime_env: DbtGxRuntimeEnv,
     ):
         """Initialize the test runner.
 
@@ -30,7 +30,7 @@ class TestRunner:
                        and dbt profile configuration.
         """
         # Create context with config
-        context_config = create_data_context_config(runtime_env.dbt_gx_config)
+        context_config = create_data_context_config()
         runtime_env.dbt_profile_config.load_target()
         self.runtime_env = runtime_env
         self.context = get_context(project_config=context_config, mode="ephemeral")
