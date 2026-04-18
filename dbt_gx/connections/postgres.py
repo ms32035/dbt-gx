@@ -1,6 +1,6 @@
 from typing import Any, ClassVar
 
-from great_expectations.datasource.fluent import Datasource
+from great_expectations.datasource.fluent.interfaces import Datasource
 from great_expectations.datasource.fluent.postgres_datasource import PostgresDatasource
 from sqlalchemy.engine.url import URL
 
@@ -14,7 +14,7 @@ class PostgresConnection(Connection):
     mapped_params: ClassVar[dict[str, str]] = {"user": "username"}
 
     @classmethod
-    def datasource(cls, target_config: dict[str, Any], model: DbtModel) -> Datasource:
+    def datasource(cls, target_config: dict[str, Any], model: DbtModel) -> "Datasource[Any, Any]":
         params, query_params = cls.params(target_config)
         return PostgresDatasource(
             name=model.full_schema or model.name,

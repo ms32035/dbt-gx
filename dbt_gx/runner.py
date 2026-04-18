@@ -7,7 +7,7 @@ from typing import cast
 from great_expectations import Checkpoint, ValidationDefinition, get_context
 from great_expectations.core.expectation_suite import ExpectationSuite
 from great_expectations.core.run_identifier import RunIdentifier
-from great_expectations.datasource.fluent import SQLDatasource
+from great_expectations.datasource.fluent.sql_datasource import SQLDatasource
 
 from dbt_gx.converter import TestConverter
 from dbt_gx.models.dbt_base import DbtModel, DbtProject
@@ -165,10 +165,10 @@ class TestRunner:
         results = self.checkpoint.run(run_id=RunIdentifier(self.runtime_env.run_name))
         end_time = datetime.now().astimezone()
         if self.runtime_env.dbt_gx_config.generate_docs:
-            self.context.add_data_docs_site(site_name="dbt_gx", site_config=self.runtime_env.site_config)
+            self.context.add_data_docs_site(site_name="dbt_gx", site_config=self.runtime_env.site_config)  # type: ignore[arg-type]
             self.context.build_data_docs(["dbt_gx"])
         return RunResult(
             run=results.run_id.to_json_dict(),
-            results=[r.to_json_dict() for r in results.run_results.values()],
+            results=[r.to_json_dict() for r in results.run_results.values()],  # type: ignore[no-untyped-call]
             end_time=end_time,
         )

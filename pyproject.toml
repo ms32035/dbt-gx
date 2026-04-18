@@ -45,6 +45,7 @@ dev = [
     "SQLAlchemy>=2.0.46",
     "dbt-postgres>=1.8.20",
     "psycopg[binary]>=3.3.3",
+    "types-PyYAML>=6.0.3",
 ]
 snowflake = [
     "snowflake-sqlalchemy>1.9.0",
@@ -72,3 +73,8 @@ ignore = ["PLR0913", "PLC0415", "PLR2004"]
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 filterwarnings = ["ignore::pytest.PytestCollectionWarning"]
+
+[dependency-groups]
+dev = [
+    "types-pyyaml",
+]

@@ -1,9 +1,10 @@
 """Test converter module for converting dbt tests to Great Expectations expectations."""
 
 import importlib
-from typing import Any
+from typing import Any, cast
 
 from great_expectations import expectations
+from great_expectations.expectations.expectation import Expectation
 
 from dbt_gx.models.dbt_base import DbtColumnTest, DbtModel, DbtTest
 from dbt_gx.models.dbt_gx_config import DbtGxConfig
@@ -66,7 +67,7 @@ class TestConverter:
             context["column_name"] = test.column_name
         return context
 
-    def convert_test(self, model: DbtModel, test: DbtTest) -> expectations.Expectation | None:
+    def convert_test(self, model: DbtModel, test: DbtTest) -> Expectation | None:
         """Convert a dbt test to a Great Expectations expectation.
 
         Args:
@@ -92,8 +93,8 @@ class TestConverter:
             result = converter_func(test.kwargs, context)
             if isinstance(result, dict):
                 expectation_class = getattr(expectations, result["expectation_type"])
-                return expectation_class(**result["kwargs"])
-            return result
+                return cast(Expectation, expectation_class(**result["kwargs"]))
+            return cast(Expectation, result)
 
         # Format parameter values with context
         params = {}
@@ -114,7 +115,7 @@ class TestConverter:
 
         # Get the expectation class and create an instance
         expectation_class = getattr(expectations, conversion.expectation_class)
-        return expectation_class(**params, meta={"model": model.meta, "check_type": check_type})
+        return cast(Expectation, expectation_class(**params, meta={"model": model.meta, "check_type": check_type}))
 
     def convert_model(self, model: DbtModel) -> GxBatch:
         """Convert a dbt model and its tests to a Great Expectations batch.

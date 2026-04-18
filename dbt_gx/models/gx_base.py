@@ -1,6 +1,6 @@
 from dataclasses import dataclass, field
 
-from great_expectations.expectations import Expectation
+from great_expectations.expectations.expectation import Expectation
 
 from dbt_gx.models.dbt_base import DbtModel
 

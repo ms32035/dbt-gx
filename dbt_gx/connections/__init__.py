@@ -2,7 +2,7 @@ from abc import ABC, abstractmethod
 from typing import TYPE_CHECKING, Any, ClassVar
 
 if TYPE_CHECKING:
-    from great_expectations.datasource.fluent import Datasource
+    from great_expectations.datasource.fluent.interfaces import Datasource
 
     from dbt_gx.models.dbt_base import DbtModel
 
@@ -28,4 +28,4 @@ class Connection(ABC):
 
     @classmethod
     @abstractmethod
-    def datasource(cls, target_config: dict[str, Any], model: "DbtModel") -> "Datasource": ...
+    def datasource(cls, target_config: dict[str, Any], model: "DbtModel") -> "Datasource[Any, Any]": ...

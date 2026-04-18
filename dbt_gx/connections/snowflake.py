@@ -1,6 +1,6 @@
 from typing import Any, ClassVar
 
-from great_expectations.datasource.fluent import Datasource
+from great_expectations.datasource.fluent.interfaces import Datasource
 from great_expectations.datasource.fluent.snowflake_datasource import SnowflakeDatasource
 from snowflake.sqlalchemy import URL
 
@@ -22,7 +22,7 @@ class SnowflakeConnection(Connection):
     )
 
     @classmethod
-    def datasource(cls, target_config: dict[str, Any], model: DbtModel) -> Datasource:
+    def datasource(cls, target_config: dict[str, Any], model: DbtModel) -> "Datasource[Any, Any]":
         params, _ = cls.params(target_config)
         return SnowflakeDatasource(
             name=model.full_schema,
