@@ -81,8 +81,16 @@ class TestRunner:
 
             # Create the datasource
             target_type = cast(str, datasource_config.get("type"))
-            conn_module = importlib.import_module(f"dbt_gx.connections.{target_type}")
-            conn_class = getattr(conn_module, target_type.capitalize() + "Connection")
+            if not target_type:
+                raise ValueError("Database type ('type') is not set in the dbt profile target configuration")
+            try:
+                conn_module = importlib.import_module(f"dbt_gx.connections.{target_type}")
+                conn_class = getattr(conn_module, target_type.capitalize() + "Connection")
+            except (ImportError, AttributeError) as e:
+                raise ValueError(
+                    f"Could not load connection adapter for database type '{target_type}': {e}. "
+                    f"Ensure a module exists at dbt_gx/connections/{target_type}.py."
+                ) from e
             datasource = conn_class.datasource(datasource_config, model)
             self.datasources[key] = datasource
             self.context.add_datasource(datasource=datasource)
@@ -93,13 +101,10 @@ class TestRunner:
         self,
         model: DbtModel,
     ) -> None:
-        """Run tests for a single dbt model using Great Expectations.
+        """Queue a dbt model's tests to be run by Great Expectations.
 
         Args:
-            model: The dbt model to run tests for.
-
-        Returns:
-            Test results from Great Expectations.
+            model: The dbt model to add.
         """
         # Get appropriate datasource for this model
         datasource = self._get_or_create_datasource(model)
@@ -146,13 +151,10 @@ class TestRunner:
         self,
         project: DbtProject,
     ) -> None:
-        """Run tests for all models in a dbt project using Great Expectations.
+        """Queue all models in a dbt project whose tests should be run.
 
         Args:
-            project: The dbt project containing models to test.
-
-        Returns:
-            Dictionary mapping model names to their test results.
+            project: The dbt project containing models to add.
         """
 
         for model in project.models:

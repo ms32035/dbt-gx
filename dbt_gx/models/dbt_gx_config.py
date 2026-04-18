@@ -49,8 +49,14 @@ def load_config(config_path: Path) -> DbtGxConfig:
     Returns:
         Loaded configuration.
     """
-    with config_path.open() as f:
-        config_dict = yaml.safe_load(f)
+    try:
+        with config_path.open() as f:
+            config_dict = yaml.safe_load(f)
+    except yaml.YAMLError as e:
+        raise ValueError(f"Configuration file at {config_path} contains invalid YAML: {e}") from e
+
+    if not config_dict:
+        raise ValueError(f"Configuration file at {config_path} is empty")
 
     generate_docs = config_dict.get("generate_docs", True)
 
@@ -58,6 +64,8 @@ def load_config(config_path: Path) -> DbtGxConfig:
     test_mappings = default_conversion_factory()
     if "test_mappings" in config_dict:
         for test_name, test_config in config_dict["test_mappings"].items():
+            if "expectation" not in test_config:
+                raise ValueError(f"Test mapping '{test_name}' in {config_path} is missing required field 'expectation'")
             params = TestConversionParams(**test_config.get("params", {}))
             test_mappings[test_name] = TestConversion(
                 expectation_class=test_config["expectation"],

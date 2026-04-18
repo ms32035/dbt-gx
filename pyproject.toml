@@ -5,9 +5,9 @@ build-backend = "hatchling.build"
 [project]
 name = "dbt-gx"
 version = "0.1.0"
-description = "Run your DBT tests using Great Expectations as the execution engine"
+description = "Run your dbt tests using Great Expectations as the execution engine"
 readme = "README.md"
-requires-python = ">=3.11,<3.15"
+requires-python = ">=3.12,<3.15"
 license = "MIT"
 keywords = ["dbt", "great-expectations", "data-quality", "testing"]
 authors = [
@@ -18,16 +18,22 @@ classifiers = [
     "Intended Audience :: Developers",
     "License :: OSI Approved :: MIT License",
     "Programming Language :: Python :: 3",
-    "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Programming Language :: Python :: 3.14",
 ]
 dependencies = [
     "click>=8.3.1",
     "dbt-core>=1.11.6",
     "great-expectations>=1.15.1",
     "pyyaml>=6.0.3",
-    #"numpy<2"
 ]
+
+[project.urls]
+Homepage = "https://github.com/ms32035/dbt-gx"
+Repository = "https://github.com/ms32035/dbt-gx"
+Changelog = "https://github.com/ms32035/dbt-gx/blob/main/CHANGELOG.md"
+Issues = "https://github.com/ms32035/dbt-gx/issues"
 
 [project.optional-dependencies]
 dev = [
@@ -43,9 +49,8 @@ dev = [
 snowflake = [
     "snowflake-sqlalchemy>1.9.0",
     "dbt-snowflake>=1.11.3",
-    "snowflake-connector-python[secure-local-storage]",
+    "snowflake-connector-python",
 ]
-
 
 [project.scripts]
 dbt-gx = "dbt_gx.cli:cli"
@@ -56,11 +61,14 @@ strict = true
 ignore_missing_imports = true
 disable_error_code = ["misc", "untyped-decorator"]
 
-
 [tool.ruff]
 line-length = 120
 target-version = "py312"
 
 [tool.ruff.lint]
 select = ["E", "F", "B", "I", "N", "UP", "PL", "RUF", "Q"]
-ignore = ["PLR0913", "PLC0415"]
+ignore = ["PLR0913", "PLC0415", "PLR2004"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+filterwarnings = ["ignore::pytest.PytestCollectionWarning"]

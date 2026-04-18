@@ -43,8 +43,11 @@ class DbtProjectScanner:
                 f"Could not find manifest.json at {manifest_path}. Please run `dbt compile` or `dbt run` first."
             )
 
-        with manifest_path.open() as f:
-            return cast(dict[str, Any], json.load(f))
+        try:
+            with manifest_path.open() as f:
+                return cast(dict[str, Any], json.load(f))
+        except json.JSONDecodeError as e:
+            raise ValueError(f"manifest.json at {manifest_path} contains invalid JSON: {e}") from e
 
     def _process_test_node(self, node: dict[str, Any], model_tests: dict[str, list[DbtTest]]) -> None:
         """Process a test node from the manifest.

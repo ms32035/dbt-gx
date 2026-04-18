@@ -17,10 +17,13 @@ class PostgresConnection(Connection):
     def datasource(cls, target_config: dict[str, Any], model: DbtModel) -> Datasource:
         params, query_params = cls.params(target_config)
         return PostgresDatasource(
-            name=model.full_schema,
+            name=model.full_schema or model.name,
             connection_string=URL.create(
                 drivername="postgresql+psycopg",
                 query=query_params,
                 **params,
+                # hide_password=False is intentional: GX's PostgresDatasource stores this as a
+                # pydantic PostgresDsn field which masks the password in __repr__ and error messages.
+                # Passing hide_password=True would store "***" as the literal password, breaking auth.
             ).render_as_string(hide_password=False),
         )

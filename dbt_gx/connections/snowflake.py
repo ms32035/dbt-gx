@@ -1,4 +1,4 @@
-from typing import Any
+from typing import Any, ClassVar
 
 from great_expectations.datasource.fluent import Datasource
 from great_expectations.datasource.fluent.snowflake_datasource import SnowflakeDatasource
@@ -10,7 +10,16 @@ from . import Connection
 
 
 class SnowflakeConnection(Connection):
-    direct_params = ("account", "user", "password", "database", "warehouse", "schema", "role", "authenticator")
+    direct_params: ClassVar[tuple[str, ...]] = (
+        "account",
+        "user",
+        "password",
+        "database",
+        "warehouse",
+        "schema",
+        "role",
+        "authenticator",
+    )
 
     @classmethod
     def datasource(cls, target_config: dict[str, Any], model: DbtModel) -> Datasource:

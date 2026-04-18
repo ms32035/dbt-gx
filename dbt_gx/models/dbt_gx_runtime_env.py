@@ -8,6 +8,11 @@ from dbt_gx.models.dbt_profile import DbtProfileConfig
 
 @dataclass
 class DbtGxRuntimeEnv:
+    """Runtime configuration for a dbt-gx execution.
+
+    Holds the project directory, dbt profile, dbt-gx config, and run metadata.
+    """
+
     project_dir: Path
     dbt_profile_config: DbtProfileConfig = field(default_factory=DbtProfileConfig)
     dbt_gx_config: DbtGxConfig = field(default_factory=DbtGxConfig)

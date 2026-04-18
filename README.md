@@ -1,26 +1,36 @@
 # dbt-gx
 
-A tool to execute dbt tests using Great Expectations as the execution engine.
+[![PyPI](https://img.shields.io/pypi/v/dbt-gx)](https://pypi.org/project/dbt-gx/)
+[![Python](https://img.shields.io/pypi/pyversions/dbt-gx)](https://pypi.org/project/dbt-gx/)
+[![CI](https://github.com/ms32035/dbt-gx/actions/workflows/ci.yml/badge.svg)](https://github.com/ms32035/dbt-gx/actions/workflows/ci.yml)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
-## Features
+**Run your dbt tests powered by Great Expectations** — richer assertions, structured JSON results, and auto-generated data docs, without changing a single line of your dbt project.
 
-- Execute dbt tests using Great Expectations
-- Support for standard dbt tests and popular packages (dbt_utils, dbt_expectations)
-- Built-in default test conversions for common dbt tests
-- Configurable test conversion between dbt and Great Expectations
-- Support for both table and column level tests
-- Custom test conversion functions
-- Integration with dbt project configuration
-- Apache Airflow operator for orchestration
+dbt-gx bridges [dbt](https://www.getdbt.com/) and [Great Expectations](https://greatexpectations.io/). It reads your compiled dbt manifest, converts your existing tests into GX expectations, executes them against your warehouse, and writes machine-readable results you can feed into dashboards, alerts, or CI gates.
+
+### Why dbt-gx?
+
+- **Zero setup overhead** — no separate GX project, no config files to maintain; point it at your dbt project and go
+- **Drop-in compatibility** — `not_null`, `unique`, and popular `dbt_utils` tests convert automatically with no changes to your models
+- **Structured output** — JSON results per suite and per expectation, ready for downstream processing or CI failure thresholds
+- **Fully extensible** — map any GX expectation with a one-line YAML entry, or plug in a custom Python function for logic that goes beyond simple checks
+- **Optional data docs** — generate a browsable HTML validation report alongside your dbt docs
 
 ## Installation
 
 ```bash
-# Install core package
+# Install core package (PostgreSQL support included)
 pip install dbt-gx
 
-# Install with Airflow support
-pip install dbt-gx[airflow]
+# With Snowflake support
+pip install "dbt-gx[snowflake]"
+```
+
+After installation, the `dbt-gx` command is available in your shell:
+
+```bash
+dbt-gx --help
 ```
 
 ## Usage
@@ -68,46 +78,6 @@ dbt-gx test --config dbt_gx_config.yml
 # Use default test conversions and your custom ones
 dbt-gx test --config dbt_gx_config.yml --test-conversion-config test_mappings.yml
 ```
-
-### Airflow Integration
-
-The package provides an Airflow operator for running dbt tests with Great Expectations. Here's an example DAG:
-
-```python
-from datetime import datetime, timedelta
-from airflow import DAG
-from dbt_gx.operators.dbt_gx_operator import DbtGxOperator
-
-with DAG(
-    "dbt_gx_example",
-    schedule_interval=timedelta(days=1),
-    start_date=datetime(2024, 1, 1),
-) as dag:
-    run_dbt_tests = DbtGxOperator(
-        task_id="run_dbt_tests",
-        project_dir="/path/to/dbt/project",
-        config_path="/path/to/dbt_gx_config.yml",
-        test_conversion_config_path="/path/to/custom_test_conversions.yml",  # Optional
-        profiles_dir="~/.dbt",
-        target="dev",
-        vars={"env": "dev"},
-        output_path="/path/to/output/test_results.json",
-        fail_on_error=True,
-    )
-```
-
-The operator supports the following parameters:
-- `project_dir`: dbt project directory
-- `config_path`: Path to dbt-gx configuration file
-- `test_conversion_config_path`: Optional path to additional test conversion configuration file
-- `profiles_dir`: Optional dbt profiles directory
-- `target`: Optional dbt target name
-- `vars`: Optional dictionary of variables to pass to dbt
-- `output_path`: Optional path to output file for test results
-- `fail_on_error`: Whether to fail the task if any test fails (default: True)
-
-All paths in the operator can use Airflow templating.
-
 ## Configuration
 
 ### Built-in Test Conversions
@@ -164,32 +134,43 @@ def custom_function(test_config: dict, context: dict) -> dict:
     }
 ```
 
+## Supported databases
+
+| Database   | Install extra      |
+|------------|--------------------|
+| PostgreSQL | *(included)*       |
+| Snowflake  | `dbt-gx[snowflake]` |
+
 ## Development
 
-1. Clone the repository
-2. Install development dependencies:
-   ```bash
-   pip install -e ".[dev]"
-   ```
-3. Install pre-commit hooks:
-   ```bash
-   pre-commit install
-   ```
-
-### Running tests
-
+```bash
+pip install -e ".[dev]"
+pre-commit install
 ```
+
+### Unit tests (no external services)
+
+```bash
+pytest tests/test_scanner.py tests/test_converter.py tests/test_config.py tests/test_runner.py
+```
+
+### Integration tests (requires Docker)
+
+Start the Postgres database (exposed on port **5433**), compile the test dbt project, then run dbt-gx against it:
+
+```bash
 docker compose up -d
 
 cd tests/resources/dbt_projects/jaffle-shop
 dbt deps
-dbt seed --profiles-dir ../../dbt_profiles
-dbt run --profiles-dir ../../dbt_profiles
+dbt seed --profiles-dir ../../dbt_profiles --target dev
+dbt run  --profiles-dir ../../dbt_profiles --target dev
+cd ../../../..
 
+dbt-gx --project-dir tests/resources/dbt_projects/jaffle-shop \
+  test \
+  --profiles-dir tests/resources/dbt_profiles \
+  --target dev
 ```
 
-Next run
-
-```
-dbt-gx test --profiles-dir ../../dbt_profiles
-```
+Results are written to `tests/resources/dbt_projects/jaffle-shop/target/dbt_gx/test_results.json`.

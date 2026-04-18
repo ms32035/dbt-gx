@@ -83,7 +83,12 @@ class TestConverter:
         context = self._get_context(test)
 
         if conversion.function:
-            converter_func = import_function(conversion.function)
+            try:
+                converter_func = import_function(conversion.function)
+            except (ImportError, AttributeError) as e:
+                raise ValueError(
+                    f"Cannot import custom function '{conversion.function}' for test '{test.test_type}': {e}"
+                ) from e
             result = converter_func(test.kwargs, context)
             if isinstance(result, dict):
                 expectation_class = getattr(expectations, result["expectation_type"])

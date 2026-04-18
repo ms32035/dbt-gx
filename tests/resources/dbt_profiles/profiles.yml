@@ -4,7 +4,7 @@ default:
     dev:
       type: postgres
       host: localhost
-      port: 5432
+      port: 5433
       user: postgres
       password: dbt-gx123
       dbname: postgres

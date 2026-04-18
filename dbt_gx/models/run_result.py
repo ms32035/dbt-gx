@@ -14,12 +14,12 @@ class RunResult:
     version: int = 1
 
     def run_stats(self) -> dict[str, int]:
+        """Return counts of suites and expectations, split by pass/fail."""
         suites = 0
         suites_success = 0
 
         expectations = 0
         expectations_success = 0
-        """Return the run statistics."""
         for result in self.results:
             if result.get("success"):
                 suites_success += 1

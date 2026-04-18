@@ -18,7 +18,7 @@ class Context:
 @click.option(
     "--project-dir",
     default=".",
-    help="dbt project directory",
+    help="Root directory of the dbt project (containing dbt_project.yml and target/)",
     type=click.Path(exists=True, file_okay=False, dir_okay=True, path_type=Path),
 )
 @click.option(
@@ -45,8 +45,11 @@ def ls(ctx: click.Context) -> None:
             ctx.obj.project_dir,
             ctx.obj.config,
         )
-    except Exception as e:
+    except (FileNotFoundError, ValueError, KeyError) as e:
         click.echo(f"Error listing tests: {e!s}", err=True)
+        raise click.Abort() from e
+    except Exception as e:
+        click.echo(f"Unexpected error listing tests: {e!s}", err=True)
         raise click.Abort() from e
 
 
@@ -59,7 +62,6 @@ def ls(ctx: click.Context) -> None:
 )
 @click.option(
     "--profile-name",
-    required=True,
     help="dbt profile name to use",
     type=str,
     default="default",
@@ -105,6 +107,9 @@ def test(
             profiles_dir,
             run_name,
         )
-    except Exception as e:
+    except (FileNotFoundError, ValueError, KeyError) as e:
         click.echo(f"Error running tests: {e!s}", err=True)
+        raise click.Abort() from e
+    except Exception as e:
+        click.echo(f"Unexpected error running tests: {e!s}", err=True)
         raise click.Abort() from e
